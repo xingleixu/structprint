@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C结构体描述符生成器 - struct_print.h</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            /* font-family: 'Consolas', 'Monaco', 'Courier New', monospace; */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: #e8eaed;
+            color: #202124;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 12px 24px;
+            border-bottom: 3px solid #34495e;
+        }
+
+        .header-main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 4px;
+            position: relative;
+            min-height: 32px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            position: absolute;
+            left: 0;
+        }
+
+        .header p {
+            font-size: 12px;
+            color: #95a5a6;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 76px);
+            padding: 0;
+            gap: 0;
+        }
+
+        .options-inline {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            border-right: 2px solid #bdc3c7;
+            overflow: hidden;
+        }
+
+        .panel:last-child {
+            border-right: none;
+        }
+
+        .panel-header {
+            padding: 8px 16px;
+            background: #34495e;
+            color: #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            min-height: 40px;
+        }
+
+        .panel-title {
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .panel-info {
+            font-size: 11px;
+            color: #95a5a6;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        textarea {
+            flex: 1;
+            border: none;
+            padding: 16px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            color: #2c3e50;
+            background: #f8f9fa;
+        }
+
+        textarea:focus {
+            background: #ffffff;
+            box-shadow: inset 0 0 0 1px #3498db;
+        }
+
+        .input-area {
+            border-right: 1px solid #e9ecef;
+        }
+
+        .output-area {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .button-group {
+            padding: 12px 16px;
+            background: #ecf0f1;
+            border-top: 1px solid #bdc3c7;
+            display: flex;
+            gap: 8px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: 1px solid #95a5a6;
+            background: #ffffff;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: #2c3e50;
+        }
+
+        .btn-primary {
+            background: #34495e;
+            color: #ecf0f1;
+            border-color: #2c3e50;
+        }
+
+        .btn-primary:hover {
+            background: #2c3e50;
+            border-color: #1a252f;
+        }
+
+        .btn-secondary {
+            background: #ffffff;
+            color: #34495e;
+            border-color: #95a5a6;
+        }
+
+        .btn-secondary:hover {
+            background: #ecf0f1;
+            border-color: #7f8c8d;
+        }
+
+        .header-status {
+            font-size: 11px;
+            padding: 4px 12px;
+            border-radius: 2px;
+            display: none;
+        }
+
+        .header-status.show {
+            display: block;
+        }
+
+        .header-status.success {
+            background: rgba(129, 199, 132, 0.2);
+            color: #81c784;
+            border: 1px solid #81c784;
+        }
+
+        .header-status.error {
+            background: rgba(229, 115, 115, 0.2);
+            color: #e57373;
+            border: 1px solid #e57373;
+        }
+
+        .header-status.info {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+            border: 1px solid #3498db;
+        }
+
+        .footer {
+            padding: 6px 24px;
+            background: #34495e;
+            border-top: 1px solid #2c3e50;
+            font-size: 9px;
+            color: #7f8c8d;
+            text-align: center;
+        }
+
+        .example-link {
+            color: #3498db;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .example-link:hover {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #7f8c8d;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .option-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #95a5a6;
+        }
+
+        .option-item input[type="radio"] {
+            width: 12px;
+            height: 12px;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .option-label-wrapper {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .option-label {
+            font-size: 10px;
+            font-weight: 500;
+            color: #ecf0f1;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .panel {
+                height: 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-main">
+            <h1>C Struct Descriptor Generator</h1>
+            <div id="status" class="header-status"></div>
+        </div>
+        <p>struct_print.h 工具 | 自动生成结构体描述符 | 支持 C99/C11</p>
+    </div>
+
+    <div class="container">
+        <!-- 左侧输入面板 -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Input - C Struct Definition</div>
+                <div class="options-inline">
+                    <div class="option-item" title="生成完整的 GET_STRUCT_DESC 宏(C11)">
+                        <input type="radio" id="modeComplete" name="c11Mode" value="complete" checked>
+                        <div class="option-label-wrapper" onclick="document.getElementById('modeComplete').checked = true">
+                            <div class="option-label">完整模式</div>
+                        </div>
+                    </div>
+                    
+                    <div class="option-item" title="生成可复制的映射行(C11)">
+                        <input type="radio" id="modeAppend" name="c11Mode" value="append">
+                        <div class="option-label-wrapper" onclick="document.getElementById('modeAppend').checked = true">
+                            <div class="option-label">追加模式</div>
+                        </div>
+                    </div>
+                    
+                    <div class="option-item" title="只生成结构体描述符（C99）">
+                        <input type="radio" id="modeDescOnly" name="c11Mode" value="desconly">
+                        <div class="option-label-wrapper" onclick="document.getElementById('modeDescOnly').checked = true">
+                            <div class="option-label">仅描述符</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-body">
+                <textarea id="input" class="input-area" placeholder="Input C struct definition here...
+
+Example:
+typedef struct {
+    u8 device_id;
+    u16 version;
+    u32 serial_number;
+    float temperature;
+} DeviceInfo;"></textarea>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="generate()">生成代码</button>
+                <button class="btn-secondary" onclick="clearInput()">清空</button>
+                <button class="btn-secondary" onclick="loadExample()">加载示例</button>
+            </div>
+        </div>
+
+        <!-- 右侧输出面板 -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Output - Generated Descriptors</div>
+                <div class="panel-info" id="structCount"></div>
+            </div>
+            <div class="panel-body">
+                <textarea id="output" class="output-area" readonly placeholder="Generated descriptor code will be displayed here..."></textarea>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="copyOutput()">复制代码</button>
+                <button class="btn-secondary" onclick="downloadOutput()">下载文件</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        struct_print.h Descriptor Generator v1.0
+    </div>
+
+    <script>
+        // ============================================================================
+        //                           类型映射表
+        // ============================================================================
+        
+        const TYPE_MAP = {
+            'uint8_t': 'FIELD_TYPE_U8',
+            'u8': 'FIELD_TYPE_U8',
+            'unsigned char': 'FIELD_TYPE_U8',
+            
+            'uint16_t': 'FIELD_TYPE_U16',
+            'u16': 'FIELD_TYPE_U16',
+            'unsigned short': 'FIELD_TYPE_U16',
+            
+            'uint32_t': 'FIELD_TYPE_U32',
+            'u32': 'FIELD_TYPE_U32',
+            'unsigned int': 'FIELD_TYPE_U32',
+            'unsigned long': 'FIELD_TYPE_U32',
+            
+            'int8_t': 'FIELD_TYPE_S8',
+            's8': 'FIELD_TYPE_S8',
+            'char': 'FIELD_TYPE_S8',
+            'signed char': 'FIELD_TYPE_S8',
+            
+            'int16_t': 'FIELD_TYPE_S16',
+            's16': 'FIELD_TYPE_S16',
+            'short': 'FIELD_TYPE_S16',
+            'signed short': 'FIELD_TYPE_S16',
+            
+            'int32_t': 'FIELD_TYPE_S32',
+            's32': 'FIELD_TYPE_S32',
+            'int': 'FIELD_TYPE_S32',
+            'signed int': 'FIELD_TYPE_S32',
+            'long': 'FIELD_TYPE_S32',
+            'signed long': 'FIELD_TYPE_S32',
+            
+            'float': 'FIELD_TYPE_FLOAT',
+            'double': 'FIELD_TYPE_DOUBLE',
+        };
+
+        // ============================================================================
+        //                           数据结构
+        // ============================================================================
+        
+        class FieldInfo {
+            constructor(name, typeName, arraySize = null, isStruct = false, structType = null) {
+                this.name = name;
+                this.typeName = typeName;
+                this.arraySize = arraySize;
+                this.isStruct = isStruct;
+                this.structType = structType;
+            }
+        }
+
+        class StructInfo {
+            constructor(name, typedefName = null) {
+                this.name = name;
+                this.typedefName = typedefName;
+                this.fields = [];
+            }
+
+            addField(field) {
+                this.fields.push(field);
+            }
+
+            getDisplayName() {
+                return this.typedefName || this.name;
+            }
+        }
+
+        // ============================================================================
+        //                           解析器类
+        // ============================================================================
+        
+        class CStructParser {
+            constructor() {
+                this.structs = {};
+            }
+
+            parseContent(content) {
+                // 移除注释
+                content = this.removeComments(content);
+                
+                // 解析 typedef struct
+                const typedefPattern = /typedef\s+struct\s*(?:\w+)?\s*\{([^}]+)\}\s*(\w+)\s*;/g;
+                let match;
+                
+                while ((match = typedefPattern.exec(content)) !== null) {
+                    const body = match[1];
+                    const typedefName = match[2];
+                    const structInfo = new StructInfo('', typedefName);
+                    this.parseStructBody(body, structInfo);
+                    this.structs[typedefName] = structInfo;
+                }
+                
+                // 解析普通 struct
+                const structPattern = /struct\s+(\w+)\s*\{([^}]+)\}\s*;/g;
+                while ((match = structPattern.exec(content)) !== null) {
+                    const structName = match[1];
+                    const body = match[2];
+                    if (!this.structs[structName]) {
+                        const structInfo = new StructInfo(structName);
+                        this.parseStructBody(body, structInfo);
+                        this.structs[structName] = structInfo;
+                    }
+                }
+                
+                return this.structs;
+            }
+
+            removeComments(content) {
+                // 移除单行注释
+                content = content.replace(/\/\/.*?$/gm, '');
+                // 移除多行注释
+                content = content.replace(/\/\*[\s\S]*?\*\//g, '');
+                return content;
+            }
+
+            parseStructBody(body, structInfo) {
+                const lines = body.split(';');
+                
+                for (let line of lines) {
+                    line = line.trim();
+                    if (!line) continue;
+                    
+                    const field = this.parseField(line);
+                    if (field) {
+                        structInfo.addField(field);
+                    }
+                }
+            }
+
+            parseField(line) {
+                line = line.trim();
+                if (!line) return null;
+                
+                // 匹配数组：type name[size]
+                let match = line.match(/([\w\s]+)\s+(\w+)\s*\[([^\]]+)\]/);
+                if (match) {
+                    const typeName = match[1].trim();
+                    const fieldName = match[2].trim();
+                    const arraySize = match[3].trim();
+                    
+                    const isStruct = typeName.startsWith('struct ') || (typeName in this.structs);
+                    const structType = isStruct ? typeName.replace('struct ', '').trim() : null;
+                    
+                    return new FieldInfo(fieldName, typeName, arraySize, isStruct, structType);
+                }
+                
+                // 匹配普通字段：type name
+                match = line.match(/([\w\s]+)\s+(\w+)/);
+                if (match) {
+                    const typeName = match[1].trim();
+                    const fieldName = match[2].trim();
+                    
+                    const isStruct = typeName.startsWith('struct ') || (typeName in this.structs);
+                    const structType = isStruct ? typeName.replace('struct ', '').trim() : null;
+                    
+                    return new FieldInfo(fieldName, typeName, null, isStruct, structType);
+                }
+                
+                return null;
+            }
+        }
+
+        // ============================================================================
+        //                           描述符生成器类
+        // ============================================================================
+        
+        class DescriptorGenerator {
+            constructor(structs) {
+                this.structs = structs;
+                this.generatedStructs = new Set();
+            }
+
+            generateAll(mode = 'complete') {
+                let output = [];
+                
+                // 生成每个结构体的描述符
+                for (let structName in this.structs) {
+                    if (!this.generatedStructs.has(structName)) {
+                        const code = this.generateDescriptor(structName);
+                        if (code) {
+                            output.push(code);
+                            output.push('');
+                        }
+                    }
+                }
+                
+                // 根据模式生成 C11 相关内容
+                if (mode === 'complete') {
+                    // 完整模式：生成完整的 GET_STRUCT_DESC 宏
+                    output.push(this.generateGenericMacro());
+                } else if (mode === 'append') {
+                    // 追加模式：生成可复制的映射行
+                    output.push(this.generateAppendHint());
+                }
+                // desconly 模式：不生成任何 C11 相关内容
+                
+                return output.join('\n');
+            }
+
+            generateDescriptor(structName) {
+                if (this.generatedStructs.has(structName)) {
+                    return '';
+                }
+                
+                const structInfo = this.structs[structName];
+                this.generatedStructs.add(structName);
+                
+                let output = [];
+                
+                // 添加注释
+                output.push(`/* 描述符：${structInfo.getDisplayName()} */`);
+                
+                // 开始定义
+                const descName = `${structInfo.getDisplayName()}_desc`;
+                output.push(`BEGIN_STRUCT_DESC(${structInfo.getDisplayName()}, ${descName})`);
+                
+                // 添加每个字段
+                for (let i = 0; i < structInfo.fields.length; i++) {
+                    const field = structInfo.fields[i];
+                    const fieldDef = this.generateFieldDescriptor(field, structInfo.getDisplayName());
+                    
+                    // 最后一个字段不加逗号
+                    if (i < structInfo.fields.length - 1) {
+                        output.push(`    ${fieldDef},`);
+                    } else {
+                        output.push(`    ${fieldDef}`);
+                    }
+                }
+                
+                // 结束定义
+                output.push(`END_STRUCT_DESC(${structInfo.getDisplayName()}, ${descName})`);
+                
+                return output.join('\n');
+            }
+
+            generateGenericMacro() {
+                const structNames = Object.keys(this.structs);
+                if (structNames.length === 0) {
+                    return '';
+                }
+                
+                let output = [];
+                output.push('/* ' + '='.repeat(76) + ' */');
+                output.push('/*                         自动类型推导宏 (用于 STRUCT_PRINT)                      */');
+                output.push('/* ' + '='.repeat(76) + ' */');
+                output.push('');
+                output.push('/**');
+                output.push(' * @brief 自动选择描述符宏（使用 C11 _Generic）');
+                output.push(' * @note 此宏由工具自动生成，用于 STRUCT_PRINT(var)');
+                output.push(' * @note 需要编译器支持 C11 标准');
+                output.push(' */');
+                output.push('#undef GET_STRUCT_DESC');
+                output.push('#define GET_STRUCT_DESC(var) _Generic((var), \\');
+                
+                // 生成每个类型的映射
+                for (let i = 0; i < structNames.length; i++) {
+                    const structName = structNames[i];
+                    const structInfo = this.structs[structName];
+                    const displayName = structInfo.getDisplayName();
+                    const descName = `${displayName}_desc`;
+                    
+                    if (i < structNames.length - 1) {
+                        output.push(`    ${displayName}: &${descName}, \\`);
+                    } else {
+                        output.push(`    ${displayName}: &${descName}, \\`);
+                        output.push('    default: NULL \\');
+                    }
+                }
+                
+                output.push(')');
+
+                return output.join('\n');
+            }
+
+            generateAppendHint() {
+                const structNames = Object.keys(this.structs);
+                if (structNames.length === 0) {
+                    return '';
+                }
+                
+                let output = [];
+                output.push('/* ' + '='.repeat(76) + ' */');
+                output.push('/*                 C11 追加模式 - 请复制以下行到已有宏中                             */');
+                output.push('/* ' + '='.repeat(76) + ' */');
+                output.push('');
+
+
+                
+                // 生成每个类型的映射行
+                for (let i = 0; i < structNames.length; i++) {
+                    const structName = structNames[i];
+                    const structInfo = this.structs[structName];
+                    const displayName = structInfo.getDisplayName();
+                    const descName = `${displayName}_desc`;
+                    
+                    output.push(`    ${displayName}: &${descName}, \\`);
+                }
+                
+
+                
+                return output.join('\n');
+            }
+
+            generateFieldDescriptor(field, structName) {
+                // 嵌套结构体
+                if (field.isStruct) {
+                    const nestedDesc = field.structType ? `${field.structType}_desc` : 'unknown_desc';
+                    return `FIELD_STRUCT(${structName}, ${field.name}, ${nestedDesc})`;
+                }
+                
+                // 数组类型
+                if (field.arraySize) {
+                    const baseType = field.typeName.trim();
+                    // 字符数组识别为字符串
+                    if (['u8', 'uint8_t', 'char', 'unsigned char'].includes(baseType)) {
+                        return `FIELD_STRING(${structName}, ${field.name})`;
+                    } else {
+                        const fieldType = TYPE_MAP[baseType] || 'FIELD_TYPE_U8';
+                        return `FIELD_ARRAY(${structName}, ${field.name}, ${fieldType})`;
+                    }
+                }
+                
+                // 基本类型
+                const baseType = field.typeName.trim();
+                
+                if (['u8', 'uint8_t', 'unsigned char'].includes(baseType)) {
+                    return `FIELD_U8(${structName}, ${field.name})`;
+                } else if (['u16', 'uint16_t', 'unsigned short'].includes(baseType)) {
+                    return `FIELD_U16(${structName}, ${field.name})`;
+                } else if (['u32', 'uint32_t', 'unsigned int', 'unsigned long'].includes(baseType)) {
+                    return `FIELD_U32(${structName}, ${field.name})`;
+                } else if (['s8', 'int8_t', 'char', 'signed char'].includes(baseType)) {
+                    return `FIELD_S8(${structName}, ${field.name})`;
+                } else if (['s16', 'int16_t', 'short', 'signed short'].includes(baseType)) {
+                    return `FIELD_S16(${structName}, ${field.name})`;
+                } else if (['s32', 'int32_t', 'int', 'signed int', 'long', 'signed long'].includes(baseType)) {
+                    return `FIELD_S32(${structName}, ${field.name})`;
+                } else if (baseType === 'float') {
+                    return `FIELD_FLOAT(${structName}, ${field.name})`;
+                } else if (baseType === 'double') {
+                    return `FIELD_DOUBLE(${structName}, ${field.name})`;
+                } else {
+                    console.warn(`未知类型: ${baseType}, 默认使用 FIELD_U8`);
+                    return `FIELD_U8(${structName}, ${field.name})`;
+                }
+            }
+        }
+
+        // ============================================================================
+        //                           UI 交互函数
+        // ============================================================================
+        
+        function generate() {
+            const input = document.getElementById('input').value;
+            const output = document.getElementById('output');
+            const status = document.getElementById('status');
+            const structCount = document.getElementById('structCount');
+            
+            // 获取选中的模式
+            let mode = 'complete';
+            if (document.getElementById('modeComplete').checked) {
+                mode = 'complete';
+            } else if (document.getElementById('modeAppend').checked) {
+                mode = 'append';
+            } else if (document.getElementById('modeDescOnly').checked) {
+                mode = 'desconly';
+            }
+            
+            if (!input.trim()) {
+                showStatus('请先输入结构体定义', 'error');
+                return;
+            }
+            
+            try {
+                // 解析结构体
+                const parser = new CStructParser();
+                const structs = parser.parseContent(input);
+                
+                const structNames = Object.keys(structs);
+                if (structNames.length === 0) {
+                    showStatus('未找到任何结构体定义，请检查输入格式', 'error');
+                    output.value = '';
+                    structCount.textContent = '';
+                    return;
+                }
+                
+                // 生成描述符
+                const generator = new DescriptorGenerator(structs);
+                const code = generator.generateAll(mode);
+                
+                // 显示结果
+                output.value = code;
+                structCount.textContent = `找到 ${structNames.length} 个结构体`;
+                
+                // 根据模式显示不同的提示
+                const modeHint = {
+                    'complete': ' (含完整 C11 宏)',
+                    'append': ' (含 C11 追加提示)',
+                    'desconly': ' (仅描述符)'
+                };
+                showStatus(`生成 ${structNames.length} 个结构体描述符 ${modeHint[mode]}`, 'success');
+                
+            } catch (error) {
+                showStatus(`生成失败: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        function copyOutput() {
+            const output = document.getElementById('output');
+            if (!output.value) {
+                showStatus('没有可复制的内容', 'error');
+                return;
+            }
+            
+            output.select();
+            document.execCommand('copy');
+            showStatus('代码已复制到剪贴板', 'success');
+        }
+
+        function downloadOutput() {
+            const output = document.getElementById('output').value;
+            if (!output) {
+                showStatus('没有可下载的内容', 'error');
+                return;
+            }
+            
+            const blob = new Blob([output], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'descriptors.h';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showStatus('文件下载成功', 'success');
+        }
+
+        function clearInput() {
+            document.getElementById('input').value = '';
+            document.getElementById('output').value = '';
+            document.getElementById('structCount').textContent = '';
+            showStatus('已清空', 'info');
+        }
+
+        function loadExample() {
+            const example = `/* 类型别名 */
+typedef uint8_t  u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef int32_t  s32;
+
+/* 示例 1: 基本类型 */
+typedef struct {
+    u8 device_id;
+    u16 firmware_version;
+    u32 serial_number;
+    float temperature;
+    double voltage;
+} DeviceInfo;
+
+/* 示例 2: 包含数组和字符串 */
+typedef struct {
+    u8 type[33];          // 字符串
+    u8 ProtocolType;
+    u8 Imei[33];          // 字符串
+    s32 MsgData;
+    u8 MsgDataString[512];
+} MqttCmdData;
+
+/* 示例 3: 嵌套结构体 */
+typedef struct {
+    u16 sensor_id;
+    s16 value;
+} SensorData;
+
+typedef struct {
+    u32 timestamp;
+    DeviceInfo device;    // 嵌套结构体
+    SensorData sensor;    // 嵌套结构体
+    u8 error_code;
+} SystemStatus;`;
+            
+            document.getElementById('input').value = example;
+            showStatus('示例加载成功，请点击生成按钮', 'info');
+        }
+
+        function showStatus(message, type = 'success') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'header-status show ' + type;
+            
+            setTimeout(() => {
+                status.classList.remove('show');
+            }, 4000);
+        }
+
+        // 自动生成（输入时）
+        document.getElementById('input').addEventListener('input', function() {
+            // 可以添加自动生成功能
+            generate();
+        });
+
+        // 快捷键支持
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + Enter 生成
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                generate();
+            }
+            // Ctrl/Cmd + S 下载
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                downloadOutput();
+            }
+        });
+
+        // 页面加载时加载示例
+        window.addEventListener('load', function() {
+            // loadExample(); // 可选：自动加载示例
+        });
+    </script>
+</body>
+</html>
+
