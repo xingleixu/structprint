@@ -1,7 +1,7 @@
 /**
  * @file test_structs.h
  * @brief 测试结构体定义文件
- * @note 此文件用于测试 gen_descriptor.py 脚本的解析功能
+ * @note 此文件用于测试 descriptor_generator.html 工具的解析功能
  */
 
 #ifndef __TEST_STRUCTS_H
